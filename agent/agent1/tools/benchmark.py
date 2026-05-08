@@ -85,6 +85,9 @@ def fetch_benchmark_data(
     ticker: str, sector: str, start_date: str, end_date: str, industry: str = ""
 ) -> tuple[list[BenchmarkComparison], list[str], list[str]]:
     """S&P500, 섹터 ETF, Peer 기업 수익률 비교. (benchmarks, peer_tickers, warnings) 반환."""
+    from datetime import datetime, timedelta
+    end_exclusive = (datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
     targets: list[tuple[str, str]] = [("^GSPC", "S&P 500")]
 
     etf = SECTOR_ETF_MAP.get(sector)
@@ -102,7 +105,7 @@ def fetch_benchmark_data(
     warnings: list[str] = []
     for sym, label in targets:
         try:
-            df = yf.download(sym, start=start_date, end=end_date, progress=False, auto_adjust=True)
+            df = yf.download(sym, start=start_date, end=end_exclusive, progress=False, auto_adjust=True)
             if df.empty:
                 warnings.append(f"벤치마크 데이터 없음: {sym}")
                 continue
