@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+import pandas as pd
 import yfinance as yf
 
 from models.schema import PriceRecord, PriceStats
@@ -44,7 +45,7 @@ def fetch_price_data(
                 low=round(float(row["Low"]), 4),
                 close=round(float(row["Close"]), 4),
                 volume=int(row["Volume"]),
-                pct_change=round(float(row["pct_change"]) if not _isnan(row["pct_change"]) else 0.0, 4),
+                pct_change=round(float(row["pct_change"]) if not pd.isna(row["pct_change"]) else 0.0, 4),
             )
         )
 
@@ -67,8 +68,3 @@ def fetch_price_data(
     return records, stats, company_name, sector
 
 
-def _isnan(val: float) -> bool:
-    try:
-        return val != val
-    except Exception:
-        return False

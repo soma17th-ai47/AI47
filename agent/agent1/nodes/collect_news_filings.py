@@ -9,6 +9,7 @@ def collect_news_filings_node(state: AgentState) -> dict:
     """뉴스·SEC 공시 수집 노드. 각 소스 실패해도 파이프라인 계속."""
     collected = state["collected_data"]
     warnings: list[str] = []
+    articles, filings = [], []
 
     try:
         articles = fetch_news(
@@ -17,7 +18,6 @@ def collect_news_filings_node(state: AgentState) -> dict:
             start_date=str(collected.start_date),
             end_date=str(collected.end_date),
         )
-        collected.news_articles = articles
     except Exception as e:
         warnings.append(f"뉴스 수집 실패: {e}")
 
@@ -27,11 +27,15 @@ def collect_news_filings_node(state: AgentState) -> dict:
             start_date=str(collected.start_date),
             end_date=str(collected.end_date),
         )
-        collected.sec_filings = filings
     except Exception as e:
         warnings.append(f"SEC 공시 수집 실패: {e}")
 
-    if warnings:
-        collected.data_quality_warnings.extend(warnings)
-
-    return {"collected_data": collected}
+    return {
+        "collected_data": collected.model_copy(
+            update={
+                "news_articles": articles,
+                "sec_filings": filings,
+                "data_quality_warnings": collected.data_quality_warnings + warnings,
+            }
+        )
+    }

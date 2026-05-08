@@ -10,18 +10,23 @@ def collect_benchmark_node(state: AgentState) -> dict:
     warnings: list[str] = []
 
     try:
-        benchmarks, peer_tickers = fetch_benchmark_data(
+        benchmarks, peer_tickers, fetch_warnings = fetch_benchmark_data(
             ticker=collected.ticker,
             sector=collected.sector or "",
             start_date=str(collected.start_date),
             end_date=str(collected.end_date),
         )
-        collected.benchmarks = benchmarks
-        collected.peer_tickers = peer_tickers
+        warnings.extend(fetch_warnings)
     except Exception as e:
+        benchmarks, peer_tickers = [], []
         warnings.append(f"벤치마크 수집 실패: {e}")
 
-    if warnings:
-        collected.data_quality_warnings.extend(warnings)
-
-    return {"collected_data": collected}
+    return {
+        "collected_data": collected.model_copy(
+            update={
+                "benchmarks": benchmarks,
+                "peer_tickers": peer_tickers,
+                "data_quality_warnings": collected.data_quality_warnings + warnings,
+            }
+        )
+    }

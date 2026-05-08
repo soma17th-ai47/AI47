@@ -37,8 +37,8 @@ MAX_PEERS = 3
 
 def fetch_benchmark_data(
     ticker: str, sector: str, start_date: str, end_date: str
-) -> tuple[list[BenchmarkComparison], list[str]]:
-    """S&P500, 섹터 ETF, Peer 기업 수익률 비교. (benchmarks, peer_tickers) 반환."""
+) -> tuple[list[BenchmarkComparison], list[str], list[str]]:
+    """S&P500, 섹터 ETF, Peer 기업 수익률 비교. (benchmarks, peer_tickers, warnings) 반환."""
     targets: list[tuple[str, str]] = [("^GSPC", "S&P 500")]
 
     etf = SECTOR_ETF_MAP.get(sector)
@@ -51,17 +51,20 @@ def fetch_benchmark_data(
         targets.append((p, p))
 
     benchmarks: list[BenchmarkComparison] = []
+    warnings: list[str] = []
     for sym, label in targets:
         try:
             df = yf.download(sym, start=start_date, end=end_date, progress=False, auto_adjust=True)
             if df.empty:
+                warnings.append(f"벤치마크 데이터 없음: {sym}")
                 continue
             df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
             first = float(df["Close"].iloc[0])
             last = float(df["Close"].iloc[-1])
             pct = round((last - first) / first * 100, 2)
             benchmarks.append(BenchmarkComparison(ticker=sym, label=label, pct_change_period=pct))
-        except Exception:
+        except Exception as e:
+            warnings.append(f"벤치마크 수집 실패 ({sym}): {e}")
             continue
 
-    return benchmarks, peer_tickers
+    return benchmarks, peer_tickers, warnings
