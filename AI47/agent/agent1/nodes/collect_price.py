@@ -7,12 +7,15 @@ from models.schema import AgentState, CollectedData
 
 
 def collect_price_node(state: AgentState) -> dict:
-    """주가·거래량 조회 노드. 실패 시 파이프라인 중단."""
+    """주가·거래량 조회 노드. 실패 시 errors 설정 후 조기 종료."""
     ticker = state["ticker"]
     start_date = state["start_date"]
     end_date = state["end_date"]
 
-    prices, stats, company_name, sector = fetch_price_data(ticker, start_date, end_date)
+    try:
+        prices, stats, company_name, sector = fetch_price_data(ticker, start_date, end_date)
+    except Exception as e:
+        return {"errors": [f"주가 수집 실패: {e}"]}
 
     collected = CollectedData(
         ticker=ticker,

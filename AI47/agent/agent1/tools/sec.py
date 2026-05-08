@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import functools
+
 import requests
 
 from models.schema import SECFiling
@@ -35,10 +37,10 @@ def fetch_sec_filings(ticker: str, start_date: str, end_date: str) -> list[SECFi
         if not (start_date <= filed_at <= end_date):
             continue
 
-        acc_clean = acc_no.replace("-", "")
+        # 올바른 EDGAR 파일 경로: /Archives/edgar/data/{cik}/{acc_compact}/{primary_doc}
+        acc_compact = acc_no.replace("-", "")
         filing_url = (
-            f"https://www.sec.gov/Archives/edgar/full-index/"
-            f"{filed_at[:4]}/{_quarter(filed_at)}/{acc_clean}-index.htm"
+            f"https://www.sec.gov/Archives/edgar/data/{cik}/{acc_compact}/{acc_no}-index.htm"
         )
         results.append(
             SECFiling(
@@ -52,7 +54,9 @@ def fetch_sec_filings(ticker: str, start_date: str, end_date: str) -> list[SECFi
     return results
 
 
+@functools.lru_cache(maxsize=1)
 def _get_cik(ticker: str) -> int | None:
+    """ticker → CIK 변환. 결과를 캐싱해 반복 다운로드 방지."""
     resp = requests.get(TICKERS_URL, headers=HEADERS, timeout=15)
     resp.raise_for_status()
     data = resp.json()
@@ -61,9 +65,3 @@ def _get_cik(ticker: str) -> int | None:
         if entry.get("ticker", "").upper() == ticker_upper:
             return int(entry["cik_str"])
     return None
-
-
-def _quarter(date_str: str) -> str:
-    month = int(date_str[5:7])
-    q = (month - 1) // 3 + 1
-    return f"QTR{q}"
