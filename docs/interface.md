@@ -8,6 +8,7 @@ Agent 1 → Agent 2로 넘기는 데이터 스키마 정의.
 ## Agent 1 출력 스키마 (`CollectedData`)
 
 ```python
+from __future__ import annotations
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date
@@ -35,7 +36,7 @@ class NewsArticle(BaseModel):
 
 class SECFiling(BaseModel):
     form_type: str             # e.g. "8-K", "10-Q"
-    filed_at: str              # ISO 8601
+    filed_at: str              # "YYYY-MM-DD"
     description: str
     url: str
 
@@ -55,21 +56,21 @@ class CollectedData(BaseModel):
     company_name: Optional[str] = None
     sector: Optional[str] = None
 
-    # 주가 데이터
-    prices: list[PriceRecord]
-    price_stats: PriceStats
+    # 주가 데이터 (주가 수집 실패 시 파이프라인 중단 → 항상 존재)
+    prices: list[PriceRecord] = []
+    price_stats: Optional[PriceStats] = None
 
-    # 비교 데이터
-    benchmarks: list[BenchmarkComparison]  # S&P500, 섹터ETF, Peer 포함
-    peer_tickers: list[str]                # 비교에 사용된 동종 기업 티커
+    # 비교 데이터 (수집 실패 시 빈 리스트)
+    benchmarks: list[BenchmarkComparison] = []
+    peer_tickers: list[str] = []
 
-    # 뉴스 및 공시
-    news_articles: list[NewsArticle]       # 최대 20개, 관련도 순 정렬
-    sec_filings: list[SECFiling]           # 분석 기간 내 공시
+    # 뉴스 및 공시 (수집 실패 시 빈 리스트 + data_quality_warnings에 경고)
+    news_articles: list[NewsArticle] = []
+    sec_filings: list[SECFiling] = []
 
     # 수집 메타
-    collected_at: str                      # ISO 8601, 수집 시각
-    data_quality_warnings: list[str]       # 수집 실패/부분 누락 경고 메시지
+    collected_at: str = ""             # ISO 8601, 수집 시각
+    data_quality_warnings: list[str] = []  # 수집 실패/부분 누락 경고 메시지
 ```
 
 ---
@@ -79,8 +80,8 @@ class CollectedData(BaseModel):
 전체 파이프라인에서 공유되는 상태.
 
 ```python
+import operator
 from typing import TypedDict, Optional, Annotated
-from langgraph.graph.message import add_messages
 
 class AgentState(TypedDict):
     # 입력
@@ -97,8 +98,8 @@ class AgentState(TypedDict):
     # Agent 3 출력
     report: Optional[dict]             # 상세 스키마는 Agent 3 담당자 정의
 
-    # 에러 추적
-    errors: list[str]
+    # 에러 추적 — Annotated[..., operator.add] 로 각 노드가 추가(append)
+    errors: Annotated[list[str], operator.add]
 ```
 
 ---
@@ -125,3 +126,4 @@ LangGraph 그래프에서 사용할 노드 이름 (오케스트레이터 연동 
 | 날짜 | 변경 내용 | 작성자 |
 |------|-----------|--------|
 | 2026-05-08 | 초안 작성 | 김진기 |
+| 2026-05-08 | 구현 반영: CollectedData 필드 기본값 추가, AgentState.errors Annotated 타입으로 수정, SECFiling.filed_at 포맷 수정 | 김진기 |

@@ -50,7 +50,8 @@ SECTOR_ETF_MAP = {
 | 제공 데이터 | 제목, 출처, 발행일, URL, 본문 일부(200자) |
 
 **주의사항:**
-- 무료 플랜은 1개월 이전 기사 조회 불가 → 1개월 이상 과거 분석 시 기사 수집 제한
+- 무료 플랜은 **최근 30일 이내 기사만** 조회 가능. 초과 시 `426 Upgrade Required` 에러 반환
+- 30일 이전 분석 기간 입력 시 뉴스 수집 실패 → `data_quality_warnings`에 경고 추가 후 계속 진행
 - 본문 전체 제공 안 됨 (헤드라인 + 200자 요약만)
 - 한국어 기사 지원 약함 → 미국 주식 기준 영어 기사 위주
 
@@ -69,11 +70,17 @@ SECTOR_ETF_MAP = {
 
 | 항목 | 내용 |
 |------|------|
-| API | https://efts.sec.gov/LATEST/search-index?q=... (Full-Text Search) |
+| API | `https://www.sec.gov/files/company_tickers.json` (ticker→CIK 매핑) |
+| API | `https://data.sec.gov/submissions/CIK{cik10}.json` (회사별 공시 목록) |
 | 비용 | 무료 |
 | API 키 | 불필요 (User-Agent 헤더 필수) |
 | Rate Limit | 10 req/sec |
 | 제공 데이터 | 8-K (중요 사건), 10-Q (분기 보고), 10-K (연간 보고), 4 (내부자 거래) |
+
+**수집 흐름:**
+1. `company_tickers.json`에서 ticker → CIK 조회
+2. `submissions/CIK{cik10}.json`에서 최근 공시 목록 가져옴
+3. `form`, `filingDate` 필드로 대상 유형·기간 필터링
 
 **수집 대상 공시 유형:**
 - `8-K`: 중요 사건 (실적 발표, M&A, CEO 교체 등) → 우선순위 높음
@@ -83,7 +90,7 @@ SECTOR_ETF_MAP = {
 **필수 헤더:**
 ```python
 headers = {
-    "User-Agent": "AI47-Project contact@example.com"
+    "User-Agent": "AI47-Project wlsrl723@gmail.com"
 }
 ```
 
@@ -119,3 +126,4 @@ DATABASE_URL=postgresql://...
 | 날짜 | 변경 내용 | 작성자 |
 |------|-----------|--------|
 | 2026-05-08 | 초안 작성 | 김진기 |
+| 2026-05-08 | SEC EDGAR 실제 사용 API 엔드포인트로 수정, NewsAPI 426 에러 및 30일 제한 명시 | 김진기 |
