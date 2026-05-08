@@ -54,6 +54,7 @@ class CollectedData(BaseModel):
     end_date: date
     company_name: Optional[str] = None
     sector: Optional[str] = None
+    industry: Optional[str] = None
 
     prices: list[PriceRecord] = []
     price_stats: Optional[PriceStats] = None

@@ -13,11 +13,12 @@ ABNORMAL_MOVE_THRESHOLD = 5.0  # %
 
 def fetch_price_data(
     ticker: str, start_date: str, end_date: str
-) -> tuple[list[PriceRecord], PriceStats, str, str]:
-    """주가·거래량 조회. (prices, stats, company_name, sector) 반환."""
+) -> tuple[list[PriceRecord], PriceStats, str, str, str]:
+    """주가·거래량 조회. (prices, stats, company_name, sector, industry) 반환."""
     info = yf.Ticker(ticker).info
     company_name: str = info.get("longName") or info.get("shortName") or ticker
     sector: str = info.get("sector") or ""
+    industry: str = info.get("industry") or ""
 
     df = yf.download(ticker, start=start_date, end=end_date, progress=False, auto_adjust=True)
     if df.empty:
@@ -65,6 +66,6 @@ def fetch_price_data(
         ),
     )
 
-    return records, stats, company_name, sector
+    return records, stats, company_name, sector, industry
 
 
