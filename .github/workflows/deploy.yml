@@ -1,0 +1,31 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 3.34.109.154
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/AI47
+
+            echo "▶ Pulling latest code..."
+            git pull origin main
+
+            echo "▶ Installing dependencies..."
+            uv pip install -r requirements.txt --python .venv/bin/python
+
+            echo "▶ Restarting service..."
+            sudo systemctl restart ai47
+
+            echo "✓ Deploy complete — $(git log -1 --oneline)"

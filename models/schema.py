@@ -69,11 +69,54 @@ class CollectedData(BaseModel):
     data_quality_warnings: list[str] = []
 
 
+# ── Agent 2 output models ──────────────────────────────────────────────────
+
+class ScoreComponents(BaseModel):
+    timing_alignment: float
+    source_credibility: float
+    stock_specificity: float
+    volume_confirmation: float
+    independent_source_confirmation: float
+
+
+class CauseHypothesis(BaseModel):
+    id: str
+    title: str
+    category: str  # earnings|analyst|macro|sector|company_specific|regulatory|technical|market_wide|unknown
+    explanation: str
+    score_components: ScoreComponents
+    score: float = 0.0
+    confidence: str = "Low"  # High|Medium|Low
+    evidence: list[str] = []
+    counterpoints: list[str] = []
+    supporting_article_indices: list[int] = []
+
+
+# ── Agent 3 output models ──────────────────────────────────────────────────
+
+class TimelineEvent(BaseModel):
+    datetime: str
+    type: str  # price_move|news|earnings|filing|analyst
+    description: str
+    url: Optional[str] = None
+
+
+class AnalysisReport(BaseModel):
+    one_line_conclusion: str
+    final_report_markdown: str
+    bull_case: str
+    bear_case: str
+    watch_next: list[str]
+    timeline: list[TimelineEvent] = []
+
+
+# ── Shared LangGraph state ─────────────────────────────────────────────────
+
 class AgentState(TypedDict):
     ticker: str
     start_date: str
     end_date: str
     collected_data: Optional[CollectedData]
-    hypotheses: Optional[list[dict]]
-    report: Optional[dict]
+    hypotheses: Optional[list[CauseHypothesis]]
+    report: Optional[AnalysisReport]
     errors: Annotated[list[str], operator.add]
