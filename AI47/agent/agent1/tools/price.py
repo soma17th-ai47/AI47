@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 import yfinance as yf
@@ -20,7 +20,9 @@ def fetch_price_data(
     sector: str = info.get("sector") or ""
     industry: str = info.get("industry") or ""
 
-    df = yf.download(ticker, start=start_date, end=end_date, progress=False, auto_adjust=True)
+    # yfinance end는 exclusive → 사용자가 입력한 end_date 당일까지 포함되도록 +1일
+    end_exclusive = (datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    df = yf.download(ticker, start=start_date, end=end_exclusive, progress=False, auto_adjust=True)
     if df.empty:
         raise ValueError(f"주가 데이터 없음: {ticker} ({start_date} ~ {end_date})")
 
@@ -55,15 +57,21 @@ def fetch_price_data(
     period_pct = round((last_close - first_close) / first_close * 100, 2)
 
     daily_changes = df["pct_change"].dropna()
+    if daily_changes.empty:
+        # 1일 데이터: 전일 대비 변동률 계산 불가 → 기간 등락률로 대체
+        max_gain = max_loss = period_pct
+        is_abnormal = abs(period_pct) >= ABNORMAL_MOVE_THRESHOLD
+    else:
+        max_gain = round(float(daily_changes.max()), 2)
+        max_loss = round(float(daily_changes.min()), 2)
+        is_abnormal = bool(daily_changes.abs().max() >= ABNORMAL_MOVE_THRESHOLD)
     stats = PriceStats(
         period_pct_change=period_pct,
-        max_single_day_gain=round(float(daily_changes.max()), 2),
-        max_single_day_loss=round(float(daily_changes.min()), 2),
+        max_single_day_gain=max_gain,
+        max_single_day_loss=max_loss,
         avg_volume=round(avg_vol, 0),
         volume_spike_dates=spike_dates,
-        is_abnormal_move=bool(
-            daily_changes.abs().max() >= ABNORMAL_MOVE_THRESHOLD
-        ),
+        is_abnormal_move=is_abnormal,
     )
 
     return records, stats, company_name, sector, industry
