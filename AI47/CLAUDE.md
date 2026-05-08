@@ -1,5 +1,8 @@
 # AI47 - 주가 변동 원인 분석 Agent 프로젝트
 
+> 이 파일은 Claude Code(AI 코딩 도구)가 프로젝트 컨텍스트를 파악하기 위해 자동으로 읽는 파일입니다.  
+> 팀원들도 프로젝트 전체 구조와 컨벤션 참고 문서로 활용할 수 있습니다.
+
 ## 프로젝트 개요
 
 사용자가 주식 티커와 분석 기간을 입력하면, 해당 주가가 왜 움직였는지 원인 가설(3~5개)과 신뢰도를 근거와 함께 설명해주는 AI Agent 서비스.
@@ -111,15 +114,16 @@ AI47/
 
 "내 로컬에서 동작한다"가 완료가 아니다. **Agent 2가 이 출력을 받아서 바로 다음 단계를 진행할 수 있는 상태**가 완료다.
 
-- [ ] 티커 + 기간 입력 시 `CollectedData` 스키마를 준수하는 객체를 반환한다
-- [ ] 주가·거래량 데이터가 정상 수집되지 않으면 파이프라인을 중단하고 에러를 반환한다
-- [ ] 뉴스·공시 수집 실패 시 `data_quality_warnings`에 경고를 추가하고 계속 진행한다
-- [ ] S&P500, 섹터 ETF, Peer 기업 비교 데이터가 `benchmarks` 필드에 포함된다
-- [ ] `price_stats.volume_spike_dates`와 `is_abnormal_move`가 계산되어 있다
-- [ ] 실제 API를 호출하며 (Mock 금지), 수집 결과를 콘솔에서 눈으로 확인했다
-- [ ] `AgentState`를 통해 LangGraph 노드로 통합 가능한 형태로 구현되어 있다
+- [x] 티커 + 기간 입력 시 `CollectedData` 스키마를 준수하는 객체를 반환한다
+- [x] 주가·거래량 데이터가 정상 수집되지 않으면 파이프라인을 중단하고 에러를 반환한다
+- [x] 뉴스·공시 수집 실패 시 `data_quality_warnings`에 경고를 추가하고 계속 진행한다
+- [x] S&P500, 섹터 ETF, Peer 기업 비교 데이터가 `benchmarks` 필드에 포함된다
+- [x] `price_stats.volume_spike_dates`와 `is_abnormal_move`가 계산되어 있다
+- [x] 실제 API를 호출하며 (Mock 금지), 수집 결과를 콘솔에서 눈으로 확인했다
+- [x] `AgentState`를 통해 LangGraph 노드로 통합 가능한 형태로 구현되어 있다
 
 ## 팀원 코드 연동
 
-팀원 구현물이 공유되지 않은 상태. Agent 1은 `docs/interface.md`에 정의된 출력 스키마를 기준으로 독립 구현. 팀원 코드 수신 시 스키마 기준으로 연동.  
-결정 배경 → `docs/decisions.md` ADR-004 참조.
+Agent 2, 3 연동 시 `docs/interface.md`에 정의된 `CollectedData` 스키마가 기준.  
+`orchestrator/graph.py`의 플레이스홀더(`_agent2_placeholder`, `_agent3_placeholder`)를 각 담당자 구현으로 교체하면 됩니다.  
+결정 배경 → `docs/decisions.md` ADR-005 참조.
