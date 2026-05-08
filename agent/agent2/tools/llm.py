@@ -10,10 +10,17 @@ from models.schema import CauseHypothesis, ScoreComponents
 _client: OpenAI | None = None
 
 
+_UPSTAGE_BASE_URL = "https://api.upstage.ai/v1"
+_MODEL = "solar-pro"
+
+
 def _get_client() -> OpenAI:
     global _client
     if _client is None:
-        _client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        _client = OpenAI(
+            api_key=os.getenv("UPSTAGE_API_KEY"),
+            base_url=_UPSTAGE_BASE_URL,
+        )
     return _client
 
 SYSTEM_PROMPT = """You are a stock movement explanation agent.
@@ -179,7 +186,7 @@ def call_hypothesis_llm(
     )
 
     response = _get_client().chat.completions.create(
-        model="gpt-4o",
+        model=_MODEL,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
