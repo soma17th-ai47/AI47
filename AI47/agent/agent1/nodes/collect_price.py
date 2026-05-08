@@ -13,7 +13,7 @@ def collect_price_node(state: AgentState) -> dict:
     end_date = state["end_date"]
 
     try:
-        prices, stats, company_name, sector = fetch_price_data(ticker, start_date, end_date)
+        prices, stats, company_name, sector, industry = fetch_price_data(ticker, start_date, end_date)
     except Exception as e:
         return {"errors": [f"주가 수집 실패: {e}"]}
 
@@ -23,6 +23,7 @@ def collect_price_node(state: AgentState) -> dict:
         end_date=end_date,
         company_name=company_name,
         sector=sector,
+        industry=industry,
         prices=prices,
         price_stats=stats,
         collected_at=datetime.now(timezone.utc).isoformat(),

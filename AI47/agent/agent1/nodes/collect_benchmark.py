@@ -15,6 +15,7 @@ def collect_benchmark_node(state: AgentState) -> dict:
             sector=collected.sector or "",
             start_date=str(collected.start_date),
             end_date=str(collected.end_date),
+            industry=collected.industry or "",
         )
         warnings.extend(fetch_warnings)
     except Exception as e:
