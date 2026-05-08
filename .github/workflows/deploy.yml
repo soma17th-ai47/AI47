@@ -19,11 +19,13 @@ jobs:
             set -e
             cd ~/AI47
 
-            echo "▶ Pulling latest code..."
-            git pull origin main
+            echo "▶ Fetching latest code..."
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
 
             echo "▶ Installing dependencies..."
-            uv pip install -r requirements.txt --python .venv/bin/python
+            ~/.local/bin/uv pip install -r requirements.txt --python .venv/bin/python
 
             echo "▶ Restarting service..."
             sudo systemctl restart ai47
