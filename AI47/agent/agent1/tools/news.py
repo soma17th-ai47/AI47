@@ -6,7 +6,7 @@ import requests
 
 from models.schema import NewsArticle
 
-MAX_ARTICLES = 20
+MAX_ARTICLES = 100  # 무료 플랜 최대치. Agent 2가 필터링하므로 최대한 수집
 NEWSAPI_BASE = "https://newsapi.org/v2/everything"
 
 
@@ -24,7 +24,7 @@ def fetch_news(
         "from": start_date,
         "to": end_date,
         "language": "en",
-        "sortBy": "publishedAt",
+        "sortBy": "relevancy",
         "pageSize": MAX_ARTICLES,
         "apiKey": api_key,
     }
