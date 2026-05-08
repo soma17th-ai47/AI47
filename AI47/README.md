@@ -11,9 +11,9 @@
 ```
 AI47/
 ├── agent/
-│   ├── agent1/         # 데이터 수집 (김진기)
-│   ├── agent2/         # 분석·가설 생성 (담당자 구현 필요)
-│   └── agent3/         # 보고서 생성 (담당자 구현 필요)
+│   ├── agent1/         # 데이터 수집
+│   ├── agent2/         # 분석·가설 생성
+│   └── agent3/         # 보고서 생성
 ├── orchestrator/       # 전체 파이프라인 연결
 ├── api/                # FastAPI 엔드포인트
 ├── models/             # Pydantic 스키마
