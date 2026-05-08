@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 load_dotenv()
 
+from models.schema import AnalysisReport, CauseHypothesis, CollectedData  # noqa: E402
 from orchestrator.graph import pipeline  # noqa: E402
 
 app = FastAPI(title="AI47 주가 변동 분석 API")
@@ -21,9 +22,9 @@ class AnalysisRequest(BaseModel):
 
 class AnalysisResponse(BaseModel):
     ticker: str
-    collected_data: dict | None
-    hypotheses: list[dict] | None
-    report: dict | None
+    collected_data: CollectedData | None
+    hypotheses: list[CauseHypothesis] | None
+    report: AnalysisReport | None
     errors: list[str]
     disclaimer: str
 
@@ -45,10 +46,9 @@ async def analyze(req: AnalysisRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    collected = result.get("collected_data")
     return AnalysisResponse(
         ticker=req.ticker.upper(),
-        collected_data=collected.model_dump() if collected else None,
+        collected_data=result.get("collected_data"),
         hypotheses=result.get("hypotheses"),
         report=result.get("report"),
         errors=result.get("errors", []),
