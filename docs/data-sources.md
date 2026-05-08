@@ -60,8 +60,8 @@ SECTOR_ETF_MAP = {
 "{company_name}" OR "{ticker}" stock
 기간: start_date ~ end_date
 언어: en
-정렬: publishedAt
-최대: 20건
+정렬: relevancy   ← publishedAt 대비 종목 관련 기사가 상위에 노출됨
+최대: 100건        ← 무료 플랜 최대치. Agent 2가 필터링 담당
 ```
 
 ---
@@ -127,3 +127,4 @@ DATABASE_URL=postgresql://...
 |------|-----------|--------|
 | 2026-05-08 | 초안 작성 | 김진기 |
 | 2026-05-08 | SEC EDGAR 실제 사용 API 엔드포인트로 수정, NewsAPI 426 에러 및 30일 제한 명시 | 김진기 |
+| 2026-05-08 | NewsAPI 정렬 publishedAt → relevancy, 최대 건수 20 → 100 변경 | 김진기 |

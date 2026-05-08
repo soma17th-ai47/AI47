@@ -55,6 +55,7 @@ class CollectedData(BaseModel):
     end_date: date
     company_name: Optional[str] = None
     sector: Optional[str] = None
+    industry: Optional[str] = None  # yfinance industry 필드 (sector보다 세분화)
 
     # 주가 데이터 (주가 수집 실패 시 파이프라인 중단 → 항상 존재)
     prices: list[PriceRecord] = []
@@ -127,3 +128,4 @@ LangGraph 그래프에서 사용할 노드 이름 (오케스트레이터 연동 
 |------|-----------|--------|
 | 2026-05-08 | 초안 작성 | 김진기 |
 | 2026-05-08 | 구현 반영: CollectedData 필드 기본값 추가, AgentState.errors Annotated 타입으로 수정, SECFiling.filed_at 포맷 수정 | 김진기 |
+| 2026-05-08 | CollectedData에 industry 필드 추가 (Peer 비교 정확도 개선) | 김진기 |
