@@ -57,23 +57,13 @@ def fetch_price_data(
     period_pct = round((last_close - first_close) / first_close * 100, 2)
 
     daily_changes = df["pct_change"].dropna()
-    if daily_changes.empty:
-        # 1일 데이터: 전일 대비 변동률 계산 불가 → 기간 등락률로 대체
-        max_gain = max_loss = period_pct
-        is_abnormal = abs(period_pct) >= ABNORMAL_MOVE_THRESHOLD
-    else:
-        max_gain = round(float(daily_changes.max()), 2)
-        max_loss = round(float(daily_changes.min()), 2)
-        is_abnormal = bool(daily_changes.abs().max() >= ABNORMAL_MOVE_THRESHOLD)
     stats = PriceStats(
         period_pct_change=period_pct,
-        max_single_day_gain=max_gain,
-        max_single_day_loss=max_loss,
+        max_single_day_gain=round(float(daily_changes.max()), 2) if not daily_changes.empty else period_pct,
+        max_single_day_loss=round(float(daily_changes.min()), 2) if not daily_changes.empty else period_pct,
         avg_volume=round(avg_vol, 0),
         volume_spike_dates=spike_dates,
-        is_abnormal_move=is_abnormal,
+        is_abnormal_move=bool(daily_changes.abs().max() >= ABNORMAL_MOVE_THRESHOLD) if not daily_changes.empty else abs(period_pct) >= ABNORMAL_MOVE_THRESHOLD,
     )
 
     return records, stats, company_name, sector, industry
-
-
