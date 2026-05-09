@@ -4,7 +4,7 @@ An AI agent service that takes a stock ticker and date range, then explains **wh
 
 **Team 47:** 김대연 · 김민석 · 김진기 · 박성준 · 황채원
 
-**Live API:** `http://3.34.109.154:8000`
+**Live API:** `http://3.34.109.154` (port 80 via Nginx → FastAPI on port 8000 internally)
 
 ---
 
@@ -112,7 +112,12 @@ AI47/
 │   └── decisions.md       # Architecture Decision Records (ADRs)
 │
 ├── tests/
-│   └── run_agent1.py      # Agent 1 standalone test
+│   ├── conftest.py            # Shared pytest fixtures
+│   ├── test_score_hypotheses.py # Scoring logic and confidence thresholds
+│   ├── test_filter_noise.py   # News dedup and filtering
+│   ├── test_schema.py         # Pydantic model validation
+│   ├── test_api.py            # FastAPI endpoints (mocked pipeline)
+│   └── run_agent1.py          # Agent 1 standalone manual test
 │
 └── requirements.txt
 ```
@@ -140,7 +145,7 @@ collect_news_and_filings
 - `prices` — daily OHLCV for the period
 - `price_stats` — period % change, max gain/loss, avg volume, volume spike dates, `is_abnormal_move`
 - `benchmarks` — S&P500, sector ETF, up to 3 peer stocks
-- `news_articles` — up to 100 recent news articles
+- `news_articles` — up to 50 recent news articles
 - `sec_filings` — 8-K, 10-Q, 10-K, Form 4 within date range
 
 ### Agent 2 — Hypothesis Generation
@@ -224,7 +229,15 @@ uv run uvicorn api.main:app --reload
 - Swagger docs: http://localhost:8000/docs
 - Health check: http://localhost:8000/health
 
-### 4. Test Agent 1 standalone
+### 4. Run the test suite
+
+```bash
+python -m pytest tests/test_score_hypotheses.py tests/test_filter_noise.py tests/test_schema.py tests/test_api.py -v
+```
+
+33 tests covering scoring logic, noise filtering, schema validation, and API endpoints. No external API calls required.
+
+### 5. Test Agent 1 standalone (hits real APIs)
 
 ```bash
 uv run python -m tests.run_agent1 AAPL 2024-01-02 2024-01-05
@@ -341,7 +354,9 @@ sudo systemctl restart ai47
 Add `EC2_SSH_KEY` (your `.pem` file contents) to:
 **GitHub → Settings → Secrets → Actions → New repository secret**
 
-Then push to `main` and GitHub Actions handles the rest.
+Then push to `main` and GitHub Actions handles the rest:
+1. **test** job — runs the 33-test pytest suite on the GitHub Actions runner
+2. **deploy** job — only runs if tests pass; SSHs into EC2, pulls `main`, reinstalls deps, restarts the service, and runs a `/health` check to confirm startup
 
 **Server info:**
 - App runs: `systemd` service → `uvicorn` on port 8000
