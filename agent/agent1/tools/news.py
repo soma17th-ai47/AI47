@@ -33,6 +33,9 @@ def fetch_news(
     resp.raise_for_status()
     data = resp.json()
 
+    if data.get("status") == "error":
+        raise RuntimeError(f"NewsAPI error: {data.get('code')} — {data.get('message')}")
+
     articles: list[NewsArticle] = []
     for item in data.get("articles", []):
         articles.append(
