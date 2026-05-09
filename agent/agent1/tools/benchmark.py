@@ -85,8 +85,12 @@ def fetch_benchmark_data(
     ticker: str, sector: str, start_date: str, end_date: str, industry: str = ""
 ) -> tuple[list[BenchmarkComparison], list[str], list[str]]:
     """S&P500, 섹터 ETF, Peer 기업 수익률 비교. (benchmarks, peer_tickers, warnings) 반환."""
+    import pandas as pd
     from datetime import datetime, timedelta
+    start_dt = datetime.strptime(start_date, "%Y-%m-%d")
     end_exclusive = (datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    history_start = (start_dt - timedelta(days=10)).strftime("%Y-%m-%d")
+    start_ts = pd.Timestamp(start_date)
 
     targets: list[tuple[str, str]] = [("^GSPC", "S&P 500")]
 
@@ -105,13 +109,18 @@ def fetch_benchmark_data(
     warnings: list[str] = []
     for sym, label in targets:
         try:
-            df = yf.download(sym, start=start_date, end=end_exclusive, progress=False, auto_adjust=True)
+            df = yf.download(sym, start=history_start, end=end_exclusive, progress=False, auto_adjust=True)
             if df.empty:
                 warnings.append(f"벤치마크 데이터 없음: {sym}")
                 continue
             df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
-            first = float(df["Close"].iloc[0])
-            last = float(df["Close"].iloc[-1])
+            df_before = df[df.index < start_ts]
+            df_in = df[df.index >= start_ts]
+            if df_in.empty:
+                warnings.append(f"벤치마크 데이터 없음: {sym}")
+                continue
+            first = float(df_before["Close"].iloc[-1]) if not df_before.empty else float(df_in["Close"].iloc[0])
+            last = float(df_in["Close"].iloc[-1])
             pct = round((last - first) / first * 100, 2)
             benchmarks.append(BenchmarkComparison(ticker=sym, label=label, pct_change_period=pct))
         except Exception as e:
