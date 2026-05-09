@@ -35,10 +35,10 @@ def score_hypotheses_node(state: AgentState) -> dict:
     """가설 점수화·신뢰도 분류 후 내림차순 정렬 노드."""
     hypotheses = state.get("hypotheses") or []
 
-    scored = [
-        h.model_copy(update={"score": _weighted_score(h), "confidence": _confidence(_weighted_score(h))})
-        for h in hypotheses
-    ]
+    scored = []
+    for h in hypotheses:
+        score = _weighted_score(h)
+        scored.append(h.model_copy(update={"score": score, "confidence": _confidence(score)}))
     scored.sort(key=lambda h: h.score, reverse=True)
 
     return {"hypotheses": scored}

@@ -196,7 +196,10 @@ def call_hypothesis_llm(
         temperature=0.3,
     )
 
-    tool_call = response.choices[0].message.tool_calls[0]
+    tool_calls = response.choices[0].message.tool_calls
+    if not tool_calls:
+        raise RuntimeError("LLM did not invoke the required tool — no tool_calls in response")
+    tool_call = tool_calls[0]
     parsed = json.loads(tool_call.function.arguments)
 
     hypotheses: list[CauseHypothesis] = []
