@@ -6,7 +6,7 @@ import requests
 
 from models.schema import NewsArticle
 
-MAX_ARTICLES = 100  # 무료 플랜 최대치. Agent 2가 필터링하므로 최대한 수집
+MAX_ARTICLES = 50
 NEWSAPI_BASE = "https://newsapi.org/v2/everything"
 
 
