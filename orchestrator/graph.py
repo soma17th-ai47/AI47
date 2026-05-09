@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import logging
+import time
+
 from langgraph.graph import END, StateGraph
 
 from agent.agent1.graph import agent1_graph
@@ -7,29 +10,45 @@ from agent.agent2.graph import agent2_graph
 from agent.agent3.graph import agent3_graph
 from models.schema import AgentState
 
+logger = logging.getLogger(__name__)
+
 
 def _run_agent1(state: AgentState) -> dict:
+    ticker = state.get("ticker", "?")
+    logger.info("[pipeline] Agent1 start — ticker=%s", ticker)
+    t = time.monotonic()
     result = agent1_graph.invoke(state)
+    errors = result.get("errors", [])
+    logger.info("[pipeline] Agent1 done — %.1fs errors=%s", time.monotonic() - t, errors)
     return {
         "collected_data": result.get("collected_data"),
-        "errors": result.get("errors", []),
+        "errors": errors,
     }
 
 
 def _run_agent2(state: AgentState) -> dict:
+    logger.info("[pipeline] Agent2 start — filter_noise → generate_hypotheses → score")
+    t = time.monotonic()
     result = agent2_graph.invoke(state)
+    errors = result.get("errors", [])
+    hypotheses = result.get("hypotheses") or []
+    logger.info("[pipeline] Agent2 done — %.1fs hypotheses=%d errors=%s", time.monotonic() - t, len(hypotheses), errors)
     return {
         "collected_data": result.get("collected_data"),  # filter_noise may update this
-        "hypotheses": result.get("hypotheses"),
-        "errors": result.get("errors", []),
+        "hypotheses": hypotheses,
+        "errors": errors,
     }
 
 
 def _run_agent3(state: AgentState) -> dict:
+    logger.info("[pipeline] Agent3 start — report generation")
+    t = time.monotonic()
     result = agent3_graph.invoke(state)
+    errors = result.get("errors", [])
+    logger.info("[pipeline] Agent3 done — %.1fs errors=%s", time.monotonic() - t, errors)
     return {
         "report": result.get("report"),
-        "errors": result.get("errors", []),
+        "errors": errors,
     }
 
 

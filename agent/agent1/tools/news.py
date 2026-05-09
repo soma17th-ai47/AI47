@@ -6,7 +6,7 @@ import requests
 
 from models.schema import NewsArticle
 
-MAX_ARTICLES = 100  # 무료 플랜 최대치. Agent 2가 필터링하므로 최대한 수집
+MAX_ARTICLES = 50
 NEWSAPI_BASE = "https://newsapi.org/v2/everything"
 
 
@@ -32,6 +32,9 @@ def fetch_news(
     resp = requests.get(NEWSAPI_BASE, params=params, timeout=10)
     resp.raise_for_status()
     data = resp.json()
+
+    if data.get("status") == "error":
+        raise RuntimeError(f"NewsAPI error: {data.get('code')} — {data.get('message')}")
 
     articles: list[NewsArticle] = []
     for item in data.get("articles", []):
